@@ -8,8 +8,6 @@ struct object {
     }
 };
 
-// СДЕЛАТЬ ОДИН ГЛОБАЛЬНЫЙ ФИКТИВНЫЙ ОБЪЕКТ, КОТОРЫЙ БУДЕМ ВОЗВРАЩАТЬ, КОГДА НЕЧЕГО ВОЗВРАЩАТЬ
-
 namespace arr {
     typedef int position;
     
@@ -51,6 +49,18 @@ namespace arr {
         int up;
     };
     
+    lst::lst() {
+        up = -1;
+    }
+    
+    int lst::empty() const{
+        return up == -1;
+    }
+    
+    int lst::full() const {
+        return up == SIZE - 1;
+    }
+    
     position lst::end() { // up - последний занятый
         return up + 1;
     }
@@ -59,7 +69,8 @@ namespace arr {
         if (up < SIZE - 1) {
             for (int i = p; i < up; i++)
                 s[i + 1] = s[i];
-            s[p] = x;
+            s[p] = x; // ГДЕ ТО ПРОБЛЕМА
+            up++;
         }
         else {
             std::cout << "There's no space\n";
@@ -74,10 +85,10 @@ namespace arr {
     }
     
     object lst::retrieve(position p) {
-        if (p != end() && p <= up)
+        if (p > 0 && p <= up)
             return s[p];
         
-        return F.o;
+        return F.o; // НЕ ТАК
     }
     
     void lst::del(position p) {
@@ -107,7 +118,7 @@ namespace arr {
     }
     
     void lst::print() {
-        for (int i = 0; i < up; i++)
+        for (int i = 0; i <= up; i++)
             std::cout << s[i].name << " " << s[i].address << std::endl;
     }
     
@@ -152,7 +163,7 @@ namespace arr {
     }
 }
 
-namespace list {
+namespace list_1connection {
     struct el {
         el(object c, el *p) : val(c), next(p) {}
         el *next;
@@ -197,23 +208,11 @@ namespace list {
     };
 }
 
-arr::lst::lst() {
-    up = -1;
-}
-
-int arr::lst::empty() const{
-    return up == -1;
-}
-
-int arr::lst::full() const {
-    return up == SIZE - 1;
-}
-
-list::lst::lst() {
+list_1connection::lst::lst() {
     head = 0;
 }
 
-list::lst::~lst() {
+list_1connection::lst::~lst() {
     el *p = head;
     while (head) {
         head = head->next;
@@ -222,42 +221,42 @@ list::lst::~lst() {
     }
 }
 
-int list::lst::empty() const {
+int list_1connection::lst::empty() const {
     return head == 0;
 }
 
-int list::lst::full() const {
+int list_1connection::lst::full() const {
     return 0;
 }
 
-list::el *list::lst::AddHead(list::el *h, object x) {
+list_1connection::el *list_1connection::lst::AddHead(list_1connection::el *h, object x) {
     el *q = new el(x, h);
     return q;
 }
 
-list::el *list::lst::ClearList(list::el *h) {
+list_1connection::el *list_1connection::lst::ClearList(list_1connection::el *h) {
     while(h != 0)
         h = DeleteHead(h);
 
     return NULL;
 }
 
-list::el *list::lst::DeleteElement(list::el *p) {
+list_1connection::el *list_1connection::lst::DeleteElement(list_1connection::el *p) {
     return NULL;
 }
 
-list::el *list::lst::DeleteHead(list::el *h) {
+list_1connection::el *list_1connection::lst::DeleteHead(list_1connection::el *h) {
     el *q = h->next;
     delete h;
     return q;
 }
 
-void list::lst::AddAfter(object x, list::el *p) {
+void list_1connection::lst::AddAfter(object x, list_1connection::el *p) {
     el *q = new el(x, p->next);
     p->next = q;
 }
 
-void list::lst::print() {
+void list_1connection::lst::print() {
     
 }
 
@@ -265,6 +264,13 @@ void list::lst::print() {
 using namespace std;
 using namespace arr;
 
-int main () {
+int main() {
+    lst L1;
+    object x;
+    strcpy(x.name, "ASD");
+    strcpy(x.address, "George");
     
+    L1.INSERT(x, L1.END());
+    
+    L1.PRINT();
 }
