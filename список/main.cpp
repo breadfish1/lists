@@ -3,6 +3,9 @@
 struct object {
     char name[30];
     char address[30];
+    int operator == (object x) {
+       return !strcmp(x.name, name) && !strcmp(x.address, address);
+    }
 };
 
 // СДЕЛАТЬ ОДИН ГЛОБАЛЬНЫЙ ФИКТИВНЫЙ ОБЪЕКТ, КОТОРЫЙ БУДЕМ ВОЗВРАЩАТЬ, КОГДА НЕЧЕГО ВОЗВРАЩАТЬ
@@ -11,8 +14,11 @@ namespace arr {
     typedef int position;
     
     struct fake {
-        
+        object o;
+        fake() { o.name[0] = '\0'; o.address[0] = '\0'; }
     };
+    
+    static const fake F;
     
     class lst {
     public:
@@ -45,7 +51,7 @@ namespace arr {
         int up;
     };
     
-    position lst::end() { // последний занятый
+    position lst::end() { // up - последний занятый
         return up + 1;
     }
     
@@ -61,7 +67,88 @@ namespace arr {
     }
     
     position lst::locate(object x) {
-        while ()
+        for (int i = 0; i < up; i++) // если нашли такой элемент, то возвращаем позицию, иначе -1
+            if (x == s[i])
+                return i;
+        return -1;
+    }
+    
+    object lst::retrieve(position p) {
+        if (p != end() && p <= up)
+            return s[p];
+        
+        return F.o;
+    }
+    
+    void lst::del(position p) {
+        if (p <= up) {
+            for (int i = p; i < up - 1; i++)
+                s[i] = s[i + 1];
+            up--;
+        }
+    }
+    
+    position lst::next(position p) {
+        return up + 1;
+    }
+    
+    position lst::previous(position p) {
+        return up - 1;
+    }
+    
+    void lst::makenull() {
+        up = -1;
+    }
+    
+    position lst::first() {
+        if (up == -1)
+            return end();
+        return 0;
+    }
+    
+    void lst::print() {
+        for (int i = 0; i < up; i++)
+            std::cout << s[i].name << " " << s[i].address << std::endl;
+    }
+    
+    position lst::END() {
+        return end();
+    }
+    
+    void lst::INSERT(object x, position p) {
+        insert(x, p);
+    }
+    
+    position lst::LOCATE(object x) {
+        return locate(x);
+    }
+    
+    object lst::RETRIEVE(position p) {
+        return retrieve(p);
+    }
+    
+    void lst::DELETE(position p) {
+        del(p);
+    }
+    
+    position lst::NEXT(position p) {
+        return next(p);
+    }
+    
+    position lst::PREVIOUS(position p) {
+        return previous(p);
+    }
+    
+    void lst::MAKENULL() {
+        makenull();
+    }
+    
+    position lst::FIRST() {
+        return first();
+    }
+    
+    void lst::PRINT() {
+        print();
     }
 }
 
