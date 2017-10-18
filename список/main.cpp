@@ -4,19 +4,24 @@ struct object {
     char name[30];
     char address[30];
     int operator == (object x) {
-       return !strcmp(x.name, name) && !strcmp(x.address, address);
+       return (!strcmp(x.name, name) && !strcmp(x.address, address));
     }
 };
 
-namespace arr {
+namespace arr { // массив
     typedef int position;
     
-    struct fake {
+    struct element {
         object o;
-        fake() { o.name[0] = '\0'; o.address[0] = '\0'; }
+        position ps;
+        element() { o.name[0] = '\0'; o.address[0] = '\0';  ps = -100;}
     };
     
-    static const fake F;
+    static const element F;
+    
+    void prn(object o) {
+        std::cout << o.name << " " << o.address;
+    }
     
     class lst {
     public:
@@ -27,7 +32,7 @@ namespace arr {
         void INSERT(object x, position p); // вставить x в позиции p
         position LOCATE(object x); // поиск x в списке, возвращает позицию, если объекта нет, то возв. END();
         object RETRIEVE(position p); // возвращает объект по позиции p, результат неопределен, если p = END();
-        void DELETE(position p); // удалить элемент в позиции p ДОЛЖЕН ЛИ ВОЗВРАЩАТЬ ИНТОВЫЙ UP??
+        void DELETE(position p); // удалить элемент в позиции p
         position NEXT(position p); // следующая позиция после p
         position PREVIOUS(position p); // предыдущая позиция перед p
         void MAKENULL(); // делает список пустым
@@ -46,7 +51,7 @@ namespace arr {
         void print();
         static const int SIZE = 10;
         object s[SIZE];
-        int up;
+        int up; // последний заполненный
     };
     
     lst::lst() {
@@ -69,7 +74,7 @@ namespace arr {
         if (up < SIZE - 1) {
             for (int i = p; i < up; i++)
                 s[i + 1] = s[i];
-            s[p] = x; // ГДЕ ТО ПРОБЛЕМА
+            s[p] = x;
             up++;
         }
         else {
@@ -78,33 +83,39 @@ namespace arr {
     }
     
     position lst::locate(object x) {
-        for (int i = 0; i < up; i++) // если нашли такой элемент, то возвращаем позицию, иначе -1
+        for (int i = 0; i <= up; i++) // если нашли такой элемент, то возвращаем позицию, иначе -1
             if (x == s[i])
                 return i;
-        return -1;
+        return end();
     }
     
     object lst::retrieve(position p) {
-        if (p > 0 && p <= up)
+        if (p > -1 && p <= up)
             return s[p];
         
-        return F.o; // НЕ ТАК
+        return F.o;
     }
     
     void lst::del(position p) {
-        if (p <= up) {
-            for (int i = p; i < up - 1; i++)
+        if (p > -1 && p <= up) {
+            for (int i = p; i < up; i++)
                 s[i] = s[i + 1];
             up--;
         }
     }
     
     position lst::next(position p) {
+        if (p == up)
+            return end();
+        if (p > up)
+            return F.ps;
         return up + 1;
     }
     
     position lst::previous(position p) {
-        return up - 1;
+        if (p == 0 || p > up + 1)
+            return F.ps;
+        return p - 1;
     }
     
     void lst::makenull() {
@@ -163,14 +174,18 @@ namespace arr {
     }
 }
 
-namespace list_1connection {
-    struct el {
-        el(object c, el *p) : val(c), next(p) {}
-        el *next;
-        object val;
+namespace list_1connection { // односвязный список
+    struct element;
+    typedef element *position;
+    
+    struct element {
+        element(object c, element *pos) : o(c), ps(pos) {}
+        element() { o.name[0] = '\0'; o.address[0] = '\0';  ps = NULL; }
+        position ps;
+        object o;
     };
     
-    typedef el *position;
+    static const element F;
     
     class lst {
     public:
@@ -189,11 +204,12 @@ namespace list_1connection {
         position FIRST();
         void PRINT();
     private:
-        el *AddHead(el *h, object x);
-        el *ClearList(el *h);
-        el *DeleteElement(el *p);
-        el *DeleteHead(el *h);
-        void AddAfter(object x, el *p);
+        int check(position p);
+        position AddHead(position h, object x);
+        position ClearList(position h);
+        position DeleteElement(position p);
+        position DeleteHead(position h);
+        void AddAfter(object x, position p);
         position end();
         void insert(object x, position p);
         position locate(object x);
@@ -204,60 +220,173 @@ namespace list_1connection {
         void makenull();
         position first();
         void print();
-        el *head;
+        position head;
     };
-}
-
-list_1connection::lst::lst() {
-    head = 0;
-}
-
-list_1connection::lst::~lst() {
-    el *p = head;
-    while (head) {
-        head = head->next;
-        delete(p);
-        p = head;
-    }
-}
-
-int list_1connection::lst::empty() const {
-    return head == 0;
-}
-
-int list_1connection::lst::full() const {
-    return 0;
-}
-
-list_1connection::el *list_1connection::lst::AddHead(list_1connection::el *h, object x) {
-    el *q = new el(x, h);
-    return q;
-}
-
-list_1connection::el *list_1connection::lst::ClearList(list_1connection::el *h) {
-    while(h != 0)
-        h = DeleteHead(h);
-
-    return NULL;
-}
-
-list_1connection::el *list_1connection::lst::DeleteElement(list_1connection::el *p) {
-    return NULL;
-}
-
-list_1connection::el *list_1connection::lst::DeleteHead(list_1connection::el *h) {
-    el *q = h->next;
-    delete h;
-    return q;
-}
-
-void list_1connection::lst::AddAfter(object x, list_1connection::el *p) {
-    el *q = new el(x, p->next);
-    p->next = q;
-}
-
-void list_1connection::lst::print() {
     
+    int lst::check(position p) { // возвращает 1, если такой адрес есть в списке, 2, если добавляем в конец, иначе ноль
+        position temp = head;
+        
+        if (p == NULL)
+            return 2;
+        
+        while (temp) {
+            if (temp == head)
+                return 1;
+            temp = temp->ps;
+        }
+        
+        return 0;
+    }
+    
+    lst::lst() {
+        head = 0;
+    }
+    
+    lst::~lst() {
+        position p = head;
+        while (head) {
+            head = head->ps;
+            delete(p);
+            p = head;
+        }
+    }
+    
+    int lst::empty() const {
+        return head == 0;
+    }
+    
+    int lst::full() const {
+        return 0;
+    }
+    
+    position lst::AddHead(position h, object x) {
+        position q = new element(x, h);
+        return q;
+    }
+    
+    position lst::ClearList(position h) {
+        while(h != 0)
+            h = DeleteHead(h);
+        
+        return NULL;
+    }
+    
+    position lst::DeleteElement(position p) {
+        return NULL;
+    }
+    
+    position lst::DeleteHead(position h) {
+        position q = h->ps;
+        delete h;
+        return q;
+    }
+    
+    void lst::AddAfter(object x, position p) {
+        position q = new element(x, p->ps);
+        p->ps = q;
+    }
+    
+    void lst::print() {
+        position temp = head;
+        
+        while (temp) {
+            std::cout << temp->o.name << " " << temp->o.address << std::endl;
+            temp = temp->ps;
+        }
+    }
+    
+    position lst::END() {
+        return NULL;
+    }
+    
+    void lst::INSERT(object x, position p) {
+        int c = check(p);
+        
+        if (!c) // если пользователь пытается добавить в несуществующую позицию
+            return;
+        
+        if (empty()) { // если список пуст, то добавляем в голову
+            if (c == 2) // при пустом списке пользователь сможет добавить только в конец, проверяем, что он делает это
+                head = AddHead(head, x);
+            return;
+        }
+        
+        if (c == 2) { // если нужно добавить в конец, но список не пустой
+            position last = head, temp = last;
+            while (last) {
+                temp = last;
+                last = last->ps;
+            }
+            AddAfter(x, temp);
+        }
+            
+        if (c == 1) // если нужно добавить в определенную существующую позицию
+            AddAfter(x, p);
+    }
+    
+    position lst::LOCATE(object x) { // возвращает позицию, если объект найден. если нет, то NULL
+        position temp = head;
+        
+        while (temp) {
+            if (temp->o == x)
+                return temp;
+            temp = temp->ps;
+        }
+        
+        return NULL;
+    }
+    
+    object lst::RETRIEVE(position p) {
+        position temp = head;
+        
+        while (temp) {
+            if (temp == p)
+                return temp->o;
+            temp = temp->ps;
+        }
+        
+        return F.o; // ненастоящий элемент
+    }
+    
+    void lst::DELETE(position p) {
+        position last = head, temp = last;
+        
+        while (last) {
+            if (last == p)
+                break;
+            temp = last;
+            last = last->ps;
+        }
+
+        if (temp == head && last == head) { // если нужно удалить голову
+            head = DeleteHead(head);
+            return;
+        }
+        
+        if (last != NULL) {
+            position _temp = temp->ps; // удаляемое
+            
+            temp->ps = _temp->ps;
+            delete _temp;
+            
+            return;
+        }
+    }
+    
+    position lst::NEXT(position p) {
+        if (check(p)) {
+            if (p->ps)
+                return p->ps;
+            else
+                return END();
+        }
+        
+        return F.ps;
+    }
+    
+    position lst::PREVIOUS(position p) {
+        
+    }
 }
 
 #include <iostream>
@@ -266,11 +395,23 @@ using namespace arr;
 
 int main() {
     lst L1;
-    object x;
-    strcpy(x.name, "ASD");
-    strcpy(x.address, "George");
+    object x, y;
+    strcpy(x.name, "AAA");
+    strcpy(x.address, "BBB");
+    
+    strcpy(y.name, "CCC");
+    strcpy(y.address, "DDD");
     
     L1.INSERT(x, L1.END());
+    L1.INSERT(y, L1.END());
+    
+    L1.PRINT();
+    
+    cout << L1.LOCATE(x) << " " << L1.LOCATE(y) << " " << endl;
+    prn(L1.RETRIEVE(0));
+    cout << endl << L1.PREVIOUS(2) << endl;
+    
+    L1.DELETE(0);
     
     L1.PRINT();
 }
