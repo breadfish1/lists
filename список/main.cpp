@@ -58,7 +58,7 @@ namespace arr { // массив
         up = -1;
     }
     
-    int lst::empty() const{
+    int lst::empty() const {
         return up == -1;
     }
     
@@ -180,7 +180,7 @@ namespace list_1connection { // односвязный список
     
     struct element {
         element(object c, element *pos) : o(c), ps(pos) {}
-        element() { o.name[0] = '\0'; o.address[0] = '\0';  ps = NULL; }
+        element() { o.name[0] = '\0'; o.address[0] = '\0';  ps = this; }
         position ps;
         object o;
     };
@@ -200,14 +200,13 @@ namespace list_1connection { // односвязный список
         void DELETE(position p);
         position NEXT(position p);
         position PREVIOUS(position p);
-        void MAKENULL();
+        position MAKENULL();
         position FIRST();
         void PRINT();
     private:
         int check(position p);
         position AddHead(position h, object x);
         position ClearList(position h);
-        position DeleteElement(position p);
         position DeleteHead(position h);
         void AddAfter(object x, position p);
         position end();
@@ -217,7 +216,6 @@ namespace list_1connection { // односвязный список
         void del(position p);
         position next(position p);
         position previous(position p);
-        void makenull();
         position first();
         void print();
         position head;
@@ -239,7 +237,7 @@ namespace list_1connection { // односвязный список
     }
     
     lst::lst() {
-        head = 0;
+        head = NULL;
     }
     
     lst::~lst() {
@@ -271,10 +269,6 @@ namespace list_1connection { // односвязный список
         return NULL;
     }
     
-    position lst::DeleteElement(position p) {
-        return NULL;
-    }
-    
     position lst::DeleteHead(position h) {
         position q = h->ps;
         delete h;
@@ -286,20 +280,11 @@ namespace list_1connection { // односвязный список
         p->ps = q;
     }
     
-    void lst::print() {
-        position temp = head;
-        
-        while (temp) {
-            std::cout << temp->o.name << " " << temp->o.address << std::endl;
-            temp = temp->ps;
-        }
-    }
-    
-    position lst::END() {
+    position lst::end() {
         return NULL;
     }
     
-    void lst::INSERT(object x, position p) {
+    void lst::insert(object x, position p) {
         int c = check(p);
         
         if (!c) // если пользователь пытается добавить в несуществующую позицию
@@ -324,7 +309,7 @@ namespace list_1connection { // односвязный список
             AddAfter(x, p);
     }
     
-    position lst::LOCATE(object x) { // возвращает позицию, если объект найден. если нет, то NULL
+    position lst::locate(object x) { // возвращает позицию, если объект найден. если нет, то NULL
         position temp = head;
         
         while (temp) {
@@ -336,7 +321,7 @@ namespace list_1connection { // односвязный список
         return NULL;
     }
     
-    object lst::RETRIEVE(position p) {
+    object lst::retrieve(position p) {
         position temp = head;
         
         while (temp) {
@@ -348,7 +333,7 @@ namespace list_1connection { // односвязный список
         return F.o; // ненастоящий элемент
     }
     
-    void lst::DELETE(position p) {
+    void lst::del(position p) {
         position last = head, temp = last;
         
         while (last) {
@@ -373,25 +358,368 @@ namespace list_1connection { // односвязный список
         }
     }
     
-    position lst::NEXT(position p) {
-        if (check(p)) {
+    position lst::next(position p) {
+        if (check(p)) { //РАБОТАЕТ? ПРОВЕРИТЬ
             if (p->ps)
                 return p->ps;
             else
-                return END();
+                return end();
         }
         
         return F.ps;
     }
     
-    position lst::PREVIOUS(position p) {
+    position lst::previous(position p) {
+        position temp = head, prev = temp;
         
+        while (temp != NULL && temp != p) {
+            prev = temp;
+            temp = temp->ps;
+        }
+        
+        if (temp != NULL)
+            return prev;
+        
+        return F.ps;
+    }
+    
+    position lst::first() {
+        if (head)
+            return head;
+        
+        return end();
+    }
+    
+    void lst::print() {
+        position temp = head;
+        
+        while (temp) {
+            std::cout << temp->o.name << " " << temp->o.address << std::endl;
+            temp = temp->ps;
+        }
+    }
+    
+    position lst::END() {
+        return end();
+    }
+    
+    void lst::INSERT(object x, position p) {
+        insert(x, p);
+    }
+    
+    position lst::LOCATE(object x) {
+        return locate(x);
+    }
+    
+    object lst::RETRIEVE(position p) {
+        return retrieve(p);
+    }
+    
+    void lst::DELETE(position p) {
+        return del(p);
+    }
+    
+    position lst::NEXT(position p) {
+        return next(p);
+    }
+    
+    position lst::PREVIOUS(position p) {
+        return previous(p);
+    }
+    
+    position lst::MAKENULL() {
+        return ClearList(head);
+    }
+    
+    position lst::FIRST() {
+        return first();
+    }
+    
+    void lst::PRINT() {
+        print();
     }
 }
 
+namespace list_2connection { // двусвязный список
+    struct element;
+    typedef element *position;
+    struct element {
+        element(object c, position next, position prev) : o(c), psNext(next), psPrev(prev) {}
+        element() { o.name[0] = '\0'; o.address[0] = '\0';  psNext = this; psPrev = this; }
+        position psNext, psPrev;
+        object o;
+    };
+    
+    static const element F;
+    
+    class lst {
+    public:
+        lst();
+        ~lst();
+        int full() const;
+        int empty() const;
+        position END();
+        void INSERT(object x, position p);
+        position LOCATE(object x);
+        object RETRIEVE(position p);
+        void DELETE(position p);
+        position NEXT(position p);
+        position PREVIOUS(position p);
+        position MAKENULL();
+        position FIRST();
+        void PRINT();
+    private:
+        int check(position p);
+        position AddHead(position h, object x);
+        position AddTail(position t, object x);
+        position ClearList(position h, position t);
+        position DeleteHead(position h);
+        position DeleteTail(position t);
+        void AddAfter(object x, position p);
+        position end();
+        void insert(object x, position p);
+        position locate(object x);
+        object retrieve(position p);
+        void del(position p);
+        position next(position p);
+        position previous(position p);
+        position first();
+        void print();
+        position head, tail;
+    };
+    
+    lst::lst() { ////////////////////////////////////////
+        head = NULL;
+        tail = NULL;
+    }
+    
+    lst::~lst() { ///////////////////////////////////////
+        head = ClearList(head, tail);
+        tail = head;
+    }
+    
+    int lst::full() const {
+        return head == 0;
+    }
+    
+    int lst::empty() const {
+        return 0;
+    }
+    
+    int lst::check(position p) { // возвращает 1, если такой адрес есть в списке, 2, если добавляем в конец, иначе ноль
+        position temp = head;
+        
+        if (p == NULL)
+            return 2;
+        
+        while (temp) {
+            if (temp == head)
+                return 1;
+            temp = temp->psNext;
+        }
+        
+        return 0;
+    }
+    
+    position lst::AddHead(position h, object x) {
+        position q = new element(x, h, NULL);
+        return q;
+    }
+    
+    position lst::AddTail(position t, object x) {
+        position q = new element(x, NULL, t);
+        return q;
+    }
+    
+    position lst::ClearList(position h, position t) {
+        position p;
+        
+        while (head) {
+            p = head;
+            head = head->psNext;
+            delete p;
+        }
+        
+        return NULL;
+    }
+    
+    position lst::DeleteHead(position h) {
+        position p = head->psNext;
+        
+        p->psPrev = NULL;
+        delete head;
+        
+        return p;
+    }
+    
+    position lst::DeleteTail(position t) {
+        position p = tail->psPrev;
+        
+        p->psNext = NULL;
+        delete tail;
+        
+        return p;
+    }
+    
+    void lst::AddAfter(object x, position p) {
+        position q;
+        q->psNext = p->psNext;
+        q->psPrev = p;
+        p->psNext = q;
+        (q->psNext)->psPrev = q;
+        q->o = x;
+    }
+    
+    position lst::end() {
+        return NULL;
+    }
+    
+    void lst::insert(object x, position p) {
+        int c = check(p);
+        
+        if (!c) // если пользователь пытается добавить в несуществующую позицию
+            return;
+        
+        if (empty()) { // если список пуст, то добавляем в голову
+            if (c == 2) // при пустом списке пользователь сможет добавить только в конец, проверяем, что он делает это
+                head = AddHead(head, x);
+            return;
+        }
+        
+        if (c == 2) { // если нужно добавить в конец, но список не пустой
+            position last = head, temp = last;
+            while (last) {
+                temp = last;
+                last = last->psNext;
+            }
+            AddAfter(x, temp);
+        }
+        
+        if (c == 1) // если нужно добавить в определенную существующую позицию
+            AddAfter(x, p);
+    }
+    
+    position lst::locate(object x) {
+        position temp = head;
+        
+        while (temp) {
+            if (temp->o == x)
+                return temp;
+            temp = temp->psNext;
+        }
+        
+        return NULL;
+    }
+    
+    object lst::retrieve(position p) {
+        position temp = head;
+        
+        while (temp) {
+            if (temp == p)
+                return temp->o;
+            temp = temp->psNext;
+        }
+        
+        return F.o; // ненастоящий элемент
+    }
+    
+    void lst::del(position p) {
+        position n, pr;
+        
+        n = p->psNext;
+        pr = p->psPrev;
+        
+        if (pr)
+            pr->psNext = n;
+        if (n)
+            n->psPrev = pr;
+        
+        delete p;
+    }
+    
+    position lst::next(position p) {
+        if (check(p)) {
+            if (p->psNext)
+                return p->psNext;
+            else
+                return end();
+        }
+        
+        return F.psNext;
+    }
+    
+    position lst::previous(position p) {
+        if (check(p)) {
+            if (p->psPrev)
+                return p->psPrev;
+            else
+                return F.psPrev;
+        }
+        
+        return F.psPrev;
+    }
+    
+    position lst::first() {
+        if (head)
+            return head;
+        
+        return end();
+    }
+    
+    void lst::print() {
+        position temp = head;
+        
+        while (temp) {
+            std::cout << temp->o.name << " " << temp->o.address << std::endl;
+            temp = temp->psNext;
+        }
+    }
+    
+    position lst::END() {
+        return end();
+    }
+    
+    void lst::INSERT(object x, position p) {
+        insert(x, p);
+    }
+    
+    position lst::LOCATE(object x) {
+        return locate(x);
+    }
+    
+    object lst::RETRIEVE(position p) {
+        return retrieve(p);
+    }
+    
+    void lst::DELETE(position p) {
+        del(p);
+    }
+    
+    position lst::NEXT(position p) {
+        return next(p);
+    }
+    
+    position lst::PREVIOUS(position p) {
+        return previous(p);
+    }
+    
+    position lst::MAKENULL() {
+        return ClearList(head, tail);
+    }
+    
+    position lst::FIRST() {
+        return first();
+    }
+    
+    void lst::PRINT() {
+        print();
+    }
+}
+
+
 #include <iostream>
 using namespace std;
-using namespace arr;
+using namespace list_2connection;
 
 int main() {
     lst L1;
@@ -408,10 +736,11 @@ int main() {
     L1.PRINT();
     
     cout << L1.LOCATE(x) << " " << L1.LOCATE(y) << " " << endl;
-    prn(L1.RETRIEVE(0));
-    cout << endl << L1.PREVIOUS(2) << endl;
+    L1.PRINT();
+    cout << L1.PREVIOUS(L1.LOCATE(y)) << endl;
+    cout << L1.NEXT(L1.LOCATE(x)) << endl;
     
-    L1.DELETE(0);
+    L1.DELETE(L1.LOCATE(x));
     
     L1.PRINT();
 }
