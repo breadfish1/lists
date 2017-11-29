@@ -123,8 +123,6 @@ namespace arr { // массив
     }
     
     position lst::first() {
-        if (up == -1)
-            return end();
         return 0;
     }
     
@@ -200,7 +198,7 @@ namespace list_1connection { // односвязный список
         void DELETE(position p);
         position NEXT(position p);
         position PREVIOUS(position p);
-        position MAKENULL();
+        void MAKENULL();
         position FIRST();
         void PRINT();
     private:
@@ -330,7 +328,7 @@ namespace list_1connection { // односвязный список
             temp = temp->ps;
         }
         
-        return NULL;
+        return F.ps;
     }
     
     object lst::retrieve(position p) {
@@ -370,8 +368,8 @@ namespace list_1connection { // односвязный список
         }
     }
     
-    position lst::next(position p) { // ОШИБКА
-        if (check(p)) { //РАБОТАЕТ? ПРОВЕРИТЬ
+    position lst::next(position p) {
+        if (check(p)) {
             if (p->ps)
                 return p->ps;
             else
@@ -381,7 +379,7 @@ namespace list_1connection { // односвязный список
         return F.ps;
     }
     
-    position lst::previous(position p) { // ОШИБКА
+    position lst::previous(position p) {
         position temp = head, prev = temp;
         
         while (temp != NULL && temp != p) {
@@ -439,8 +437,9 @@ namespace list_1connection { // односвязный список
         return previous(p);
     }
     
-    position lst::MAKENULL() {
-        return ClearList(head);
+    void lst::MAKENULL() {
+        ClearList(head);
+        head = NULL;
     }
     
     position lst::FIRST() {
@@ -473,26 +472,26 @@ namespace list_2connection { // двусвязный список
     public:
         lst();
         ~lst();
-        int full() const;
-        int empty() const;
-        position END();
-        void INSERT(object x, position p);
-        position LOCATE(object x);
-        object RETRIEVE(position p);
-        void DELETE(position p);
-        position NEXT(position p);
-        position PREVIOUS(position p);
-        position MAKENULL();
-        position FIRST();
-        void PRINT();
+        int full() const; // проверка полноты
+        int empty() const; // проверка пустоты
+        position END(); // возвращает следующую позицию после последнего
+        void INSERT(object x, position p); // вставить x в позиции p
+        position LOCATE(object x); // поиск x в списке, возвращает позицию, если объекта нет, то возв. END();
+        object RETRIEVE(position p); // возвращает объект по позиции p, результат неопределен, если p = END();
+        void DELETE(position p); // удалить элемент в позиции p
+        position NEXT(position p); // следующая позиция после p
+        position PREVIOUS(position p); // предыдущая позиция перед p
+        void MAKENULL(); // делает список пустым
+        position FIRST(); // возвращает первую позицию, если список пуст, то возвращает END();
+        void PRINT(); // печать списка
     private:
-        int check(position p, position head);
-        position AddHead(position h, object x);
-        position AddTail(position t, object x);
-        position ClearList(position h, position t);
-        position DeleteHead(position h);
-        position DeleteTail(position t);
-        void AddAfter(object x, position p);
+        int check(position p, position head); // возвращает 1, если такой адрес есть в списке, 2, если добавляем в конец, 3, если в начало, иначе ноль
+        position AddHead(position h, object x); // добавить в голову
+        position AddTail(position t, object x); // добавить в хвост
+        pair ClearList(pair l); // очистить список
+        position DeleteHead(position h); // удалить голову
+        position DeleteTail(position t); // удалить хвост
+        void AddAfter(object x, position p); // добавить после p объект x
         position end();
         pair insert(object x, position p, pair l);
         position locate(object x, position head);
@@ -505,14 +504,13 @@ namespace list_2connection { // двусвязный список
         pair HT;
     };
     
-    lst::lst() { ////////////////////////////////////////
+    lst::lst() {
         HT.head = NULL;
         HT.tail = NULL;
     }
     
-    lst::~lst() { ///////////////////////////////////////
-        HT.head = ClearList(HT.head, HT.tail);
-        HT.tail = HT.head;
+    lst::~lst() {
+        HT = ClearList(HT);
     }
     
     int lst::full() const {
@@ -541,7 +539,7 @@ namespace list_2connection { // двусвязный список
         return 0;
     }
     
-    position lst::AddHead(position h, object x) { // НЕПРАВИЛЬНО
+    position lst::AddHead(position h, object x) {
         position q = new element(x, h, NULL);
         
         if (h)
@@ -550,7 +548,7 @@ namespace list_2connection { // двусвязный список
         return q;
     }
     
-    position lst::AddTail(position t, object x) { // НЕПРАВИЛЬНО
+    position lst::AddTail(position t, object x) {
         position q = new element(x, NULL, t);
         
         if (t)
@@ -559,16 +557,19 @@ namespace list_2connection { // двусвязный список
         return q;
     }
     
-    position lst::ClearList(position h, position t) {
+    pair lst::ClearList(pair l) {
         position p;
         
-        while (h) {
-            p = h;
-            h = h->psNext;
+        while (l.head) {
+            p = l.head;
+            l.head = l.head->psNext;
             delete p;
         }
         
-        return NULL;
+        l.head = NULL;
+        l.tail = NULL;
+        
+        return l;
     }
     
     position lst::DeleteHead(position h) {
@@ -621,7 +622,7 @@ namespace list_2connection { // двусвязный список
             return l;
         }
 
-        if (c == 3) {
+        if (c == 3) { // ТУТ ОШИБКА, СДВИГАТЬ
             l.head = AddHead(l.head, x);
             return l;
         }
@@ -660,21 +661,32 @@ namespace list_2connection { // двусвязный список
     
     pair lst::del(position p, pair l) {
         position n, pr;
+        int c = check(p, l.head);
         
-        if ()
+        if (p == l.head) {
+            l.head = DeleteHead(l.head);
+            return l;
+        }
         
-        n = p->psNext;
-        pr = p->psPrev;
+        if (p == l.tail) {
+            l.tail = DeleteTail(l.tail);
+            return l;
+        }
         
-        if (pr)
+        if (c == 1) {
+            n = p->psNext;
+            pr = p->psPrev;
+            
             pr->psNext = n;
-        if (n)
             n->psPrev = pr;
+            
+            delete p;
+        }
         
-        delete p;
+        return l;
     }
     
-    position lst::next(position p, position head) { // ОШИБКА
+    position lst::next(position p, position head) {
         int c = check(p, head);
         
         if (c && c != 2) {
@@ -687,7 +699,7 @@ namespace list_2connection { // двусвязный список
         return F.psNext;
     }
     
-    position lst::previous(position p, position head) { // ОШИБКА
+    position lst::previous(position p, position head) {
         int c = check(p, head);
         
         if (c == 1) {
@@ -721,7 +733,7 @@ namespace list_2connection { // двусвязный список
     }
     
     void lst::INSERT(object x, position p) {
-        insert(x, p, HT);
+        HT = insert(x, p, HT);
     }
     
     position lst::LOCATE(object x) {
@@ -733,7 +745,7 @@ namespace list_2connection { // двусвязный список
     }
     
     void lst::DELETE(position p) {
-        del(p);
+        HT = del(p, HT);
     }
     
     position lst::NEXT(position p) {
@@ -744,8 +756,8 @@ namespace list_2connection { // двусвязный список
         return previous(p, HT.head);
     }
     
-    position lst::MAKENULL() {
-        return ClearList(HT.head, HT.tail);
+    void lst::MAKENULL() {
+        HT = ClearList(HT);
     }
     
     position lst::FIRST() {
@@ -762,9 +774,9 @@ namespace cursor { // курсор
     typedef int position;
     struct element {
         element(object c) : o(c) {}
-        element() { o.name[0] = '\0'; o.address[0] = '\0'; next = -1; }
+        element() { o.name[0] = '\0'; o.address[0] = '\0'; next = -2; }
         object o;
-        int next;
+        position next;
     };
     
     static const element F;
@@ -773,34 +785,141 @@ namespace cursor { // курсор
     public:
         lst();
         ~lst();
-        int full() const;
-        int empty() const;
-        position END();
-        void INSERT(object x, position p);
-        position LOCATE(object x);
-        object RETRIEVE(position p);
-        void DELETE(position p);
-        position NEXT(position p);
-        position PREVIOUS(position p);
-        position MAKENULL();
-        position FIRST();
-        void PRINT();
+        int full() const; // проверка полноты
+        int empty() const; // проверка пустоты
+        position END(); // возвращает следующую позицию после последнего
+        void INSERT(object x, position p); // вставить x в позиции p
+        position LOCATE(object x); // поиск x в списке, возвращает позицию, если объекта нет, то возв. END();
+        object RETRIEVE(position p); // возвращает объект по позиции p, результат неопределен, если p = END();
+        void DELETE(position p); // удалить элемент в позиции p
+        position NEXT(position p); // следующая позиция после p
+        position PREVIOUS(position p); // предыдущая позиция перед p
+        position MAKENULL(); // делает список пустым
+        position FIRST(); // возвращает первую позицию, если список пуст, то возвращает END();
+        void PRINT(); // печать списка
+        static void set_a(); // инициализация статического массива
     private:
-        
         position end();
-        void insert(object x, position p);
-        position locate(object x);
-        object retrieve(position p);
-        void del(position p);
-        position next(position p);
-        position previous(position p);
-        position first();
+        position insert(object x, position p, position h);
+        position locate(object x, position h);
+        object retrieve(position p, position h);
+        position del(position p, position h);
+        position ifExists(position p, position h);
+        position next(position p, position h);
+        position previous(position p, position h);
+        position first(position h);
         void print();
+        void transfer(position &a, position &b);
+        
+        static position space;
+        static const int size = 20;
+        static element a[size];
+        position head;
     };
+    
+    position lst::space = 0;
+    
+    void lst::set_a() {
+        int i;
+        for (i = 0; i < size - 1; i++)
+            a[i].next = i;
+        a[i].next = -1;
+    }
+    
+    lst::lst() {
+        head = end();
+    }
+    
+    lst::~lst() {
+        
+    }
+    
+    position lst::end() {
+        return -1;
+    }
+    
+    position lst::insert(object x, position p, position h) {
+        if (p == F.next) // если пытаемся добавить в несуществующую позицию
+            return F.next;
+        
+        if (p == end()) { // если нужно вставить в конец
+            
+        }
+        
+        
+    }
+    
+    position lst::locate(object x, position h) { // вернет позицию искомого объекта. Если такого эл-та в списке нет, то F.next
+        while (h > 0) {
+            if (x == a[h].o)
+                return h;
+            else
+                h = a[h].next;
+        }
+        
+        return F.next;
+    }
+    
+    object lst::retrieve(position p, position h) {
+        while (h > 0) {
+            if (p == h)
+                return a[h].o;
+            else
+                h = a[h].next;
+        }
+        
+        return F.o;
+    }
+    
+//    position lst::del(position p, position h) {
+//
+//    }
+    
+    position lst::ifExists(position p, position h) { // если элемент есть в списке, то возвращается предыдущий, иначе F.next
+        position prev = h;
+        
+        while (h > 0) {
+            if (h == p)
+                return prev;
+            prev = h;
+            h = a[h].next;
+        }
+        
+        return F.next;
+    }
+    
+    position lst::next(position p, position h) {
+        if (!empty() && p == h)
+            return a[p].next;
+        
+        position prev = ifExists(p, h);
+        
+        if (prev != -1)
+            return a[p].next;
+        
+        return F.next;
+    }
+    
+    position lst::previous(position p, position h) {
+        if (!empty() && p == h)
+            return F.next;
+        
+        position prev = ifExists(p, h);
+        
+        if (prev != F.next)
+            return prev;
+        
+        return F.next;
+    }
+    
+    position lst::first(position h) {
+        if (h == end())
+            return end();
+        
+        return h;
+    }
 }
 
-
-#include <iostream>
 using namespace std;
 using namespace list_2connection;
 
@@ -824,6 +943,10 @@ int main() {
     cout << L1.NEXT(L1.LOCATE(x)) << endl;
     
     L1.DELETE(L1.LOCATE(x));
+    
+    L1.PRINT();
+    
+    L1.MAKENULL();
     
     L1.PRINT();
 }
